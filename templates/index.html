@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spam Mail Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Spam Mail Detector</h1>
+        <form id="spam-form">
+            <textarea 
+                id="email-text" 
+                name="email_text" 
+                placeholder="Paste your email text here..." 
+                rows="10" 
+                required
+            ></textarea>
+            <button type="submit">Check for Spam</button>
+        </form>
+        
+        <div id="result" class="hidden">
+            <h2 id="result-message"></h2>
+            <p id="probability"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('spam-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                const messageElem = document.getElementById('result-message');
+                const probabilityElem = document.getElementById('probability');
+                
+                resultDiv.classList.remove('hidden');
+                
+                if (data.is_spam) {
+                    messageElem.textContent = 'Spam Detected!';
+                    messageElem.style.color = 'red';
+                } else {
+                    messageElem.textContent = 'Not Spam';
+                    messageElem.style.color = 'green';
+                }
+                
+                probabilityElem.textContent = `Confidence: ${(data.spam_probability * 100).toFixed(2)}%`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request.');
+            });
+        });
+    </script>
+</body>
+</html>
